@@ -88,6 +88,7 @@ def main(rank: int, world_size: int, config: dict):
         # Load checkpoint.
         model_state_dict = torch.load(config["model_checkpoint"])["model_state_dict"]
         model.load_state_dict(model_state_dict)
+        
         print(f"GPU{rank}] Checkpoint loaded successfully.")
 
         # Only embeddings are optimized.
@@ -148,7 +149,9 @@ if __name__ == "__main__":
 
     rs_numpy, rs_torch = handle_reproducibility(config["seed"])
     torch.set_default_dtype(torch.float32)
-
+    
+    print(torch.cuda.device_count())
+    print(int(os.environ["SLURM_GPUS_ON_NODE"]))
     world_size = torch.cuda.device_count()
     assert world_size == int(os.environ["SLURM_GPUS_ON_NODE"])
 
