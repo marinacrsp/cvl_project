@@ -1,0 +1,14 @@
+*__pycache__*
+.vscode/*
+.ipynb_checkpoints/*
+logs/*
+models/*
+others/*
+
+*.pt
+# *.sh
+*.pkl
+# *.yaml
+*.png
+
+test.ipynb
