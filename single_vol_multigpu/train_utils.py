@@ -11,6 +11,7 @@ from data_utils import *
 from fastmri.data.transforms import tensor_to_complex_np
 from skimage.metrics import peak_signal_noise_ratio, structural_similarity
 from torch.utils.data import DataLoader, TensorDataset
+from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.utils.tensorboard import SummaryWriter
 
 
@@ -24,6 +25,7 @@ class Trainer:
         self.dataloader = dataloader
 
         self.model = model.to(self.device)
+        self.model = DDP(self.model, device_ids=[self.device])
 
         # If stateful loss function, move its "parameters" to `device`.
         if hasattr(loss_fn, "to"):
@@ -33,29 +35,30 @@ class Trainer:
         self.optimizer = optimizer
         self.scheduler = scheduler
 
-        self.log_interval = config["log_interval"]
-        self.checkpoint_interval = config["checkpoint_interval"]
-        self.path_to_out = Path(config["path_to_outputs"])
-        self.timestamp = config["timestamp"]
-        self.writer = SummaryWriter(self.path_to_out / self.timestamp)
+        if self.device == 0:
+            self.log_interval = config["log_interval"]
+            self.checkpoint_interval = config["checkpoint_interval"]
+            self.path_to_out = Path(config["path_to_outputs"])
+            self.timestamp = config["timestamp"]
+            self.writer = SummaryWriter(self.path_to_out / self.timestamp)
 
-        # Ground truth (used to compute the evaluation metrics).
-        file = self.dataloader.dataset.metadata[0]["file"]
-        with h5py.File(file, "r") as hf:
-            self.ground_truth = hf["reconstruction_rss"][()][
-                : config["dataset"]["n_slices"]
-            ]
+            # Ground truth (used to compute the evaluation metrics).
+            file = self.dataloader.dataset.metadata[0]["file"]
+            with h5py.File(file, "r") as hf:
+                self.ground_truth = hf["reconstruction_rss"][()][
+                    : config["dataset"]["n_slices"]
+                ]
 
-        # Scientific and nuissance hyperparameters.
-        self.hparam_info = config["hparam_info"]
-        # self.hparam_info["loss"] = config["loss"]["id"]
-        # self.hparam_info["acceleration"] = config["dataset"]["acceleration"]
-        # self.hparam_info["center_frac"] = config["dataset"]["center_frac"]
+            # Scientific and nuissance hyperparameters.
+            self.hparam_info = config["hparam_info"]
+            # self.hparam_info["loss"] = config["loss"]["id"]
+            # self.hparam_info["acceleration"] = config["dataset"]["acceleration"]
+            # self.hparam_info["center_frac"] = config["dataset"]["center_frac"]
 
-        # Evaluation metrics for the last log.
-        self.last_nmse = [0] * len(self.dataloader.dataset.metadata)
-        self.last_psnr = [0] * len(self.dataloader.dataset.metadata)
-        self.last_ssim = [0] * len(self.dataloader.dataset.metadata)
+            # Evaluation metrics for the last log.
+            self.last_nmse = [0] * len(self.dataloader.dataset.metadata)
+            self.last_psnr = [0] * len(self.dataloader.dataset.metadata)
+            self.last_ssim = [0] * len(self.dataloader.dataset.metadata)
 
     ###########################################################################
     ###########################################################################
@@ -65,23 +68,26 @@ class Trainer:
         """Train the model across multiple epochs and log the performance."""
         empirical_risk = 0
         for epoch_idx in range(self.n_epochs):
+            self.dataloader.sampler.set_epoch(epoch_idx)
             empirical_risk = self._train_one_epoch()
+            
+            if self.device == 0:
+                print(f"EPOCH {epoch_idx}    avg loss: {empirical_risk}\n")
+                self.writer.add_scalar("Loss/train", empirical_risk, epoch_idx)
+                # TODO: UNCOMMENT WHEN USING LR SCHEDULER.
+                # self.writer.add_scalar("Learning Rate", self.scheduler.get_last_lr()[0], epoch_idx)
 
-            print(f"EPOCH {epoch_idx}    avg loss: {empirical_risk}\n")
-            self.writer.add_scalar("Loss/train", empirical_risk, epoch_idx)
-            # TODO: UNCOMMENT WHEN USING LR SCHEDULER.
-            # self.writer.add_scalar("Learning Rate", self.scheduler.get_last_lr()[0], epoch_idx)
+                if (epoch_idx + 1) % self.log_interval == 0:
+                    self._log_performance(epoch_idx)
+                    self._log_weight_info(epoch_idx)
 
-            if (epoch_idx + 1) % self.log_interval == 0:
-                self._log_performance(epoch_idx)
-                self._log_weight_info(epoch_idx)
-
-            if (epoch_idx + 1) % self.checkpoint_interval == 0:
-                # Takes ~3 seconds.
-                self._save_checkpoint(epoch_idx)
-
-        self._log_information(empirical_risk)
-        self.writer.close()
+                if (epoch_idx + 1) % self.checkpoint_interval == 0:
+                    # Takes ~3 seconds.
+                    self._save_checkpoint(epoch_idx)
+                    
+        if self.device == 0:
+            self._log_information(empirical_risk)
+            self.writer.close()
 
     def _train_one_epoch(self):
         # Also known as "empirical risk".

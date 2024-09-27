@@ -49,7 +49,7 @@ class KCoordDataset(Dataset):
             ##################################################
             # Mask creation
             ##################################################
-            mask_func = EquiSpacedMaskFunc(
+            mask_func = RandomMaskFunc(
                 center_fractions=[center_frac], accelerations=[acceleration]
             )
             shape = (1,) * len(volume_kspace.shape[:-3]) + tuple(
