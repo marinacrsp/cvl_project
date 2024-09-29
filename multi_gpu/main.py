@@ -150,8 +150,13 @@ if __name__ == "__main__":
     rs_numpy, rs_torch = handle_reproducibility(config["seed"])
     torch.set_default_dtype(torch.float32)
     
+    master_addr = os.environ.get('MASTER_ADDR')
+    master_port = os.environ.get('MASTER_PORT')
+    
     print(torch.cuda.device_count())
     print(int(os.environ["SLURM_GPUS_ON_NODE"]))
+    print(master_addr, master_port)
+    
     world_size = torch.cuda.device_count()
     assert world_size == int(os.environ["SLURM_GPUS_ON_NODE"])
 

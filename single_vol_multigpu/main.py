@@ -65,6 +65,7 @@ def main(rank: int, world_size: int, config: dict):
         batch_size=loader_config["batch_size"],
         num_workers=int(os.environ["SLURM_CPUS_PER_TASK"]),
         shuffle=False,
+        sampler=DistributedSampler(dataset),
         pin_memory=loader_config["pin_memory"],
     )
 
@@ -89,6 +90,7 @@ def main(rank: int, world_size: int, config: dict):
         print(f"optimizer {optimizer}")
         print(f"scheduler {scheduler}")
         print(config)
+        print(f"Number of steps per epoch: {len(dataloader)}")
 
     ##################################################
     # Training Process
@@ -99,6 +101,7 @@ def main(rank: int, world_size: int, config: dict):
         loss_fn=loss_fn,
         optimizer=optimizer,
         scheduler=scheduler,
+        device = rank,
         config=config,
     )
     trainer.train()
@@ -112,6 +115,7 @@ if __name__ == "__main__":
 
     rs_numpy, rs_torch = handle_reproducibility(config["seed"])
     torch.set_default_dtype(torch.float32)
+    
     world_size = torch.cuda.device_count()
     assert world_size == int(os.environ["SLURM_GPUS_ON_NODE"])
     

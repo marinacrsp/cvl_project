@@ -17,9 +17,17 @@ from torch.utils.tensorboard import SummaryWriter
 
 class Trainer:
     def __init__(
-        self, dataloader, model, loss_fn, optimizer, scheduler, config
+        self, 
+        dataloader, 
+        model, 
+        loss_fn, 
+        optimizer,
+        scheduler,
+        device, 
+        config,
+        
     ) -> None:
-        self.device = torch.device(config["device"])
+        self.device = device
         self.n_epochs = config["n_epochs"]
 
         self.dataloader = dataloader

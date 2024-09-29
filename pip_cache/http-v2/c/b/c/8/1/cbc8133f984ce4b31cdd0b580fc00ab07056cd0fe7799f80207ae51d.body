@@ -1,0 +1,34 @@
+Metadata-Version: 2.1
+Name: lightning-cloud
+Version: 0.5.70
+Summary: Lightning Cloud
+Home-page: https://lightning.ai
+Author: Grid.ai
+Author-email: grid-eng@grid.ai
+License: Apache Software License
+Platform: UNKNOWN
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: License :: OSI Approved :: Apache Software License
+Requires-Python: >=3.7.0
+Description-Content-Type: text/x-rst
+Requires-Dist: click
+Requires-Dist: fastapi
+Requires-Dist: pyjwt
+Requires-Dist: python-multipart
+Requires-Dist: requests
+Requires-Dist: rich
+Requires-Dist: six
+Requires-Dist: urllib3
+Requires-Dist: uvicorn
+Requires-Dist: websocket-client
+Requires-Dist: boto3
+Requires-Dist: protobuf
+
+Lightning AI Command Line Interface
+
+
