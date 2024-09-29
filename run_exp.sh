@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH  --output=logs/%j.out
 #SBATCH  --cpus-per-task=4
-#SBATCH  --gres=gpu:2
+#SBATCH  --gres=gpu:4   
 #SBATCH  --constraint='titan_xp'
 #SBATCH  --mem=50G
 

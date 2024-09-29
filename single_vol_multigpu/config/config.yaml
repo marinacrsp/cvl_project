@@ -43,9 +43,9 @@ scheduler:
     step_size: 20_000
 
 # Training Process
-n_epochs: 2_000
+n_epochs: 1_000
 log_interval: 100
-checkpoint_interval: 2_000  # Keep in mind that each checkpoint takes ~241 MB of space.
+checkpoint_interval: 500  # Keep in mind that each checkpoint takes ~241 MB of space.
 
 
 ###################################################
