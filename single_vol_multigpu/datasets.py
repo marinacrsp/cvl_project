@@ -17,10 +17,10 @@ class KCoordDataset(Dataset):
         self,
         path_to_data: Union[str, Path, os.PathLike],
         n_volumes: int = 1,
-        n_slices: int = 16,
+        n_slices: int = 8,
         with_mask: bool = True,
         acceleration: int = 4,
-        center_frac: float = 0.1,
+        center_frac: float = 0.15,
     ):
         self.metadata = {}
         self.inputs = []

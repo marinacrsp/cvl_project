@@ -8,7 +8,7 @@ from config.config_utils import (
     save_config,
 )
 from datasets import KCoordDataset, seed_worker
-from model import *
+from model_mc import *
 from torch.optim import SGD, Adam, AdamW
 from torch.optim.lr_scheduler import StepLR
 from torch.utils.data import DataLoader

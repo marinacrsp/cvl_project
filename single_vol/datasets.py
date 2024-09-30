@@ -20,7 +20,7 @@ class KCoordDataset(Dataset):
         n_slices: int = 3,
         with_mask: bool = True,
         acceleration: int = 4,
-        center_frac: float = 0.1,
+        center_frac: float = 0.15,
     ):
         self.metadata = {}
         self.inputs = []
@@ -49,7 +49,7 @@ class KCoordDataset(Dataset):
             ##################################################
             # Mask creation
             ##################################################
-            mask_func = EquiSpacedMaskFunc(
+            mask_func = RandomMaskFunc(
                 center_fractions=[center_frac], accelerations=[acceleration]
             )
             shape = (1,) * len(volume_kspace.shape[:-3]) + tuple(
